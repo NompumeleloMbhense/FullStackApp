@@ -1,0 +1,11 @@
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\bin\Debug\net8.0\SharedApp.deps.json
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\bin\Debug\net8.0\SharedApp.dll
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\bin\Debug\net8.0\SharedApp.pdb
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.AssemblyInfoInputs.cache
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.AssemblyInfo.cs
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.csproj.CoreCompileInputs.cache
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.dll
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\refint\SharedApp.dll
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.pdb
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\ref\SharedApp.dll

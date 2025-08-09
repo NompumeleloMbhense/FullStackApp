@@ -1,0 +1,102 @@
+@page "/fetchproducts"
+@using SharedApp.Models
+@using System.Text.Json
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+
+<h3>Product List</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color:red">@errorMessage</p>
+}
+else if (products != null && products.Length > 0)
+{
+    <ul>
+        @foreach (var product in products)
+        {
+            <li>@product.Name - R@product.Price</li>
+        }
+    </ul>
+}
+else
+{
+    <p>No products available</p>
+}
+
+
+
+@code
+{
+    private Product[]? products;
+    private string? errorMessage;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+
+            // Set a timeout to avoid hanging requests
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+            var response = await Http.GetAsync("/api/productlist", cts.Token);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync(cts.Token);
+
+                try
+                {
+                    products = JsonSerializer.Deserialize<Product[]>(json, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    if (products == null)
+                    {
+                        errorMessage = "Received empty product data.";
+                    }
+                }
+                catch (JsonException)
+                {
+                    errorMessage = "Error parsing product data. See console for details.";
+                    await JS.InvokeVoidAsync("console.error", "Invalid JSON received from /api/products:", json);
+                }
+            }
+            else
+            {
+                errorMessage = $"API returned error: {response.StatusCode}";
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            errorMessage = "Request timed out. Please try again later.";
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Network error: {ex.Message}";
+        }
+        catch (NotSupportedException ex)
+        {
+            errorMessage = $"Unsupported content type: {ex.Message}";
+        }
+        catch (JsonException ex)
+        {
+            errorMessage = $"Error parsing product data: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Unexpected error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
