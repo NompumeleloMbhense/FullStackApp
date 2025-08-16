@@ -20,10 +20,25 @@ app.MapGet("/api/productlist", () =>
 {
     return new[]
     {
-        new { Id = 1, Name = "Laptop", Price = 12000.50, Stock = 25, Category = new {Id=101, Name = "Electronics"}},
-        new { Id = 2, Name = "Headphones", Price = 450.00, Stock = 100, Category = new {Id=102, Name = "Accessories"}}
+        new Product
+        {
+            Id = 1,
+            Name = "Laptop",
+            Price = 12000.50,
+            Stock = 25,
+            Categories = new List<string> {"Electronics", "Computers"},
+            Supplier = new Supplier { Name="Tech World", Location="Roodepoort"}
+        },    
+        new Product
+        {
+            Id = 2,
+            Name = "Headphones",
+            Price = 450.00,
+            Stock = 100,
+            Categories = new List<string> {"Accessories", "Audio"},
+            Supplier = new Supplier {Name="Sound Co", Location="Randburg"}
+        }
     };
 });
 
 app.Run();
-

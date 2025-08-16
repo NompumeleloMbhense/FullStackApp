@@ -1,21 +1,22 @@
 {
   "mainAssemblyName": "ClientApp",
   "resources": {
-    "hash": "sha256-qa5BheM83hKeAxP30LMFOpljsyxbzL9Nyb6v08xhWlY=",
+    "hash": "sha256-V/ee6dk+4Am47xlHSqK2HgwVHOPEYN0cu1FV1Ei8EUU=",
     "jsModuleNative": {
-      "dotnet.native.8.0.10.8s65sgr5kh.js": "sha256-QVxMlY7ohmjgde/bZMA0dlWDAeuUP+tEfkiSdg4DFcE="
+      "dotnet.native.js": "sha256-O/NCYcAN9uPocD7ns7AzF/cqx7f5vL1PTJCQs0vEXyk="
     },
     "jsModuleRuntime": {
-      "dotnet.runtime.8.0.10.xnqeh5n67e.js": "sha256-FjrgL9dY6dc2yUoXDWowSfachSgM8O29qUMWDQOJKRI="
+      "dotnet.runtime.js": "sha256-91CDXCvYTrWqTidtPWAY6j9w/EQtJKjSj9VneQwl020="
     },
     "wasmNative": {
-      "dotnet.native.wasm": "sha256-4ymhDbG5daKbi9yL1L574jRRiFFQhiOrDJU5YAYALU4="
+      "dotnet.native.wasm": "sha256-ejEStOt2QNSl51aw0kg/9b8HrrVebvgm5k7AdzN/5VQ="
     },
     "icu": {
       "icudt_CJK.dat": "sha256-SZLtQnRc0JkwqHab0VUVP7T3uBPSeYzxzDnpxPpUnHk=",
       "icudt_EFIGS.dat": "sha256-8fItetYY8kQ0ww6oxwTLiT3oXlBwHKumbeP2pRF4yTc=",
       "icudt_no_CJK.dat": "sha256-L7sV7NEYP37/Qr2FPCePo5cJqRgTXRwGHuwF5Q+0Nfs="
     },
+    "coreAssembly": {},
     "assembly": {
       "Microsoft.AspNetCore.Authorization.wasm": "sha256-qvUVaVXCx0vIwC1ftYywcGopJB8y43BbfcCt3G9PQgM=",
       "Microsoft.AspNetCore.Components.wasm": "sha256-xr0Ov2b8dQS8xDDq0cDAHAiTk03Nhy7Nb/TaMeGY25U=",
@@ -208,12 +209,12 @@
       "mscorlib.wasm": "sha256-KvqZaNpjwhrOuzE4b4aMFsI+VUTyiWfoDI4zn4l9BM8=",
       "netstandard.wasm": "sha256-v+s7sWxtOM6bnOvC0jFrtnm6uMfbDymwl2nHNgbS2LM=",
       "System.Private.CoreLib.wasm": "sha256-pklll63uFQoY6vaD3vbluS9osYiJWLLLmob1yHFgepI=",
-      "SharedApp.wasm": "sha256-aTdIEcVL+bKWBi8BB6DtoyhkXMqB69XVvIMaP/jc+eM=",
-      "ClientApp.wasm": "sha256-HJK5z/7eIq/fhW1FA7osUNUueW2R0AiwkVnBetzDSts="
+      "SharedApp.wasm": "sha256-Odw9Kq1WL0708cA+uBq0gZa2bivvl5SmwXmPbbU3kQY=",
+      "ClientApp.wasm": "sha256-dwwNNeb3tWmQBP7OsrvgYS6N3858bJ/e+dmWJQRtvGA="
     },
     "pdb": {
-      "SharedApp.pdb": "sha256-tbfs8BEgrvokQlykGJ30nPe1MolITld+KKLksb7qQxs=",
-      "ClientApp.pdb": "sha256-JkG3C4FdRYkzc0EDUUn60KyfNXYJcm+G93WpYUmt7Go="
+      "SharedApp.pdb": "sha256-NIlyHNK4FKMgErWYiOp1dxNSwaE37NRs/PcgSgSdrWs=",
+      "ClientApp.pdb": "sha256-byoD61u8JpQIr+Ul9buam8zm2RhSDMxsC3zqbOhSCtg="
     }
   },
   "cacheBootResources": true,

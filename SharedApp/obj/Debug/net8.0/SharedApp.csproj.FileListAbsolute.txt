@@ -9,3 +9,4 @@ C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.dll
 C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\refint\SharedApp.dll
 C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.pdb
 C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\ref\SharedApp.dll
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.sourcelink.json

@@ -5,7 +5,7 @@
 @inject IJSRuntime JS
 
 
-<h3>Product List</h3>
+<h3 class="mb-4">Product List</h3>
 
 @if (isLoading)
 {
@@ -17,12 +17,41 @@ else if (!string.IsNullOrEmpty(errorMessage))
 }
 else if (products != null && products.Length > 0)
 {
-    <ul>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
         @foreach (var product in products)
         {
-            <li>@product.Name - R@product.Price</li>
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">@product.Name</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@product.Price</h6>
+
+                        <p class="mb-1"><strong>Categories: </strong>
+                            @if (product.Categories != null && product.Categories.Any())
+                            {
+                                <span>@string.Join(", ", product.Categories)</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">None</span>
+                            }
+                        </p>
+
+                        <p class="mb-1">
+                            <strong>Supplier: </strong>@product.Supplier?.Name
+                            @if (!string.IsNullOrWhiteSpace(product.Supplier?.Location))
+                            {
+                                <span> - @product.Supplier.Location</span>
+                            }
+                        </p>
+                        <span class="badge @(product.Available ? "bg-success" : "bg-danger")">
+                            @(product.Available ? "Available" : "Out of stock")
+                        </span>
+                    </div>
+                </div>
+            </div>
         }
-    </ul>
+    </div>
 }
 else
 {
@@ -42,7 +71,7 @@ else
         try
         {
 
-            // Set a timeout to avoid hanging requests
+            // timeout to avoid hanging requests
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 
             var response = await Http.GetAsync("/api/productlist", cts.Token);
@@ -66,7 +95,7 @@ else
                 catch (JsonException)
                 {
                     errorMessage = "Error parsing product data. See console for details.";
-                    await JS.InvokeVoidAsync("console.error", "Invalid JSON received from /api/products:", json);
+                    await JS.InvokeVoidAsync("console.error", "Invalid JSON:", json);
                 }
             }
             else
@@ -76,7 +105,7 @@ else
         }
         catch (TaskCanceledException)
         {
-            errorMessage = "Request timed out. Please try again later.";
+            errorMessage = "Request timed out.";
         }
         catch (HttpRequestException ex)
         {
