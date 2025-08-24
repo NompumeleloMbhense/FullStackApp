@@ -36,3 +36,6 @@ C:\Users\nsmbh\Projects\FullStackApp\ServerApp\obj\Debug\net8.0\rjsmrazor.dswa.c
 C:\Users\nsmbh\Projects\FullStackApp\ServerApp\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
 C:\Users\nsmbh\Projects\FullStackApp\ServerApp\obj\Debug\net8.0\staticwebassets.build.json.cache
 C:\Users\nsmbh\Projects\FullStackApp\ServerApp\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+C:\Users\nsmbh\Projects\FullStackApp\ServerApp\bin\Debug\net8.0\FluentValidation.dll
+C:\Users\nsmbh\Projects\FullStackApp\ServerApp\bin\Debug\net8.0\FluentValidation.AspNetCore.dll
+C:\Users\nsmbh\Projects\FullStackApp\ServerApp\bin\Debug\net8.0\FluentValidation.DependencyInjectionExtensions.dll

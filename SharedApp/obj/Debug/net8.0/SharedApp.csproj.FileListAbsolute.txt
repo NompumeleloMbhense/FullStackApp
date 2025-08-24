@@ -10,3 +10,4 @@ C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\refint\SharedApp
 C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.pdb
 C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\ref\SharedApp.dll
 C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.sourcelink.json
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.csproj.AssemblyReference.cache
