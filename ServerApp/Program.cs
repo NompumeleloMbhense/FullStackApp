@@ -24,6 +24,26 @@ builder.Services
 
 var app = builder.Build();
 
+// Global error handler for bad requests 
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (BadHttpRequestException ex)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+        var error = ex.Message.Contains("Implicit body inferred")
+            ? "Request body is required."
+            : ex.Message;
+
+        await context.Response.WriteAsJsonAsync(new { error });
+    }
+
+});
+
 app.UseCors();
 
 
@@ -89,9 +109,7 @@ app.MapGet("/api/suppliers/{id:int}", (int id) =>
 // Create Supplier
 app.MapPost("/api/suppliers", (Supplier? newSupplier, IValidator<Supplier> validator) =>
 {
-    if (newSupplier is null)
-        return Results.BadRequest(new { error = "Request body is required." });
-
+    
     var result = validator.Validate(newSupplier);
     if (!result.IsValid)
         return Results.BadRequest(result.Errors);
@@ -203,9 +221,8 @@ app.MapPost("/api/products", (Product newProduct, IValidator<Product> validator)
     if (!result.IsValid)
         return Results.BadRequest(result.Errors);
 
-
     // Ensure products is not empty before incrementing ID
-        newProduct.Id = products.Any() ? products.Max(p => p.Id) + 1 : 1;
+    newProduct.Id = products.Any() ? products.Max(p => p.Id) + 1 : 1;
 
     // Add the new product to the list
     products.Add(newProduct);
@@ -257,19 +274,19 @@ app.MapPatch("/api/products/{id:int}", (int id, ProductPatchDto partialUpdate, I
 
 
     // Name validation and update
-        if (partialUpdate.Name is not null)
-            existingProduct.Name = partialUpdate.Name;
-        
+    if (partialUpdate.Name is not null)
+        existingProduct.Name = partialUpdate.Name;
+
 
     // Price validation & update
     if (partialUpdate.Price.HasValue)
         existingProduct.Price = partialUpdate.Price.Value;
-    
+
 
     // Stock validation & update
     if (partialUpdate.Stock.HasValue)
         existingProduct.Stock = partialUpdate.Stock.Value;
-    
+
 
     // Update categories
     if (partialUpdate.Categories is not null && partialUpdate.Categories.Any())
