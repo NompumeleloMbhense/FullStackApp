@@ -26,6 +26,25 @@ var app = builder.Build();
 
 app.UseCors();
 
+
+// In-memory suppliers
+var suppliers = new List<Supplier>
+{
+    new Supplier
+    {
+        Id = 1,
+        Name = "Tech World",
+        Location = "Roodepoort"
+    },
+    new Supplier
+    {
+        Id = 2,
+        Name = "Sound Co",
+        Location = "Randburg"
+    }
+};
+
+
 // In-memory product list 
 var products = new List<Product>()
 {
@@ -36,7 +55,7 @@ var products = new List<Product>()
         Price = 12000.50M,
         Stock = 25,
         Categories = new List<string> {"Electronics", "Computers"},
-        Supplier = new Supplier { Name="Tech World", Location="Roodepoort"}
+        SupplierId = 1
     },
     new Product
     {
@@ -45,9 +64,107 @@ var products = new List<Product>()
         Price = 450.00M,
         Stock = 100,
         Categories = new List<string> { "Accessories", "Audio" },
-        Supplier = new Supplier { Name = "Sound Co", Location = "Randburg" }
+        SupplierId = 2
     }
 };
+
+
+// --------------------------------- SUPPLIERS ENDPOINTS -------------------------------
+
+
+// Get All Suppliers
+app.MapGet("/api/suppliers", () =>
+{
+    return Results.Ok(suppliers);
+});
+
+// Get Supplier By Id
+app.MapGet("/api/suppliers/{id:int}", (int id) =>
+{
+    var supplier = suppliers.FirstOrDefault(s => s.Id == id);
+
+    return supplier is not null ? Results.Ok(supplier) : Results.NotFound(new { error = "Supplier not found" });
+});
+
+// Create Supplier
+app.MapPost("/api/suppliers", (Supplier? newSupplier, IValidator<Supplier> validator) =>
+{
+    if (newSupplier is null)
+        return Results.BadRequest(new { error = "Request body is required." });
+
+    var result = validator.Validate(newSupplier);
+    if (!result.IsValid)
+        return Results.BadRequest(result.Errors);
+
+    newSupplier.Id = suppliers.Any() ? suppliers.Max(s => s.Id) + 1 : 1;
+    suppliers.Add(newSupplier);
+
+    return Results.Created($"/api/suppliers/{newSupplier.Id}", newSupplier);
+});
+
+// Update Supplier 
+app.MapPut("/api/suppliers/{id:int}", (int id, Supplier updatedSupplier, IValidator<Supplier> validator) =>
+{
+    var supplier = suppliers.FirstOrDefault(s => s.Id == id);
+    if (supplier is null)
+        return Results.NotFound(new { error = "Supplier not found" });
+
+    var result = validator.Validate(updatedSupplier);
+    if (!result.IsValid)
+        return Results.BadRequest(result.Errors);
+
+    supplier.Name = updatedSupplier.Name;
+    supplier.Location = updatedSupplier.Location;
+
+    return Results.Ok(supplier);
+});
+
+// Partially update supplier
+app.MapPatch("/api/suppliers/{id:int}", (int id, SupplierPatchDto supplierUpdate, IValidator<SupplierPatchDto> validator) =>
+{
+    var supplier = suppliers.FirstOrDefault(s => s.Id == id);
+
+    if (supplier is null)
+        return Results.NotFound(new { error = "Supplier not found" });
+
+    var result = validator.Validate(supplierUpdate);
+    if (!result.IsValid)
+        return Results.BadRequest(result.Errors);
+
+
+    if (supplier is not null && supplierUpdate.Name is not null)
+        supplier.Name = supplierUpdate.Name;
+
+    if (supplier is not null && supplierUpdate.Location is not null)
+        supplier.Location = supplierUpdate.Location;
+
+    return Results.Ok(supplier);
+});
+
+// When a user send a PATCH request without an Id
+app.MapPatch("/api/suppliers", () =>
+{
+    return Results.BadRequest(new { error = "Supplier ID is required in the URL." });
+});
+
+
+// Delete Supplier
+app.MapDelete("/api/suppliers/{id:int}", (int id) =>
+{
+    var supplier = suppliers.FirstOrDefault(s => s.Id == id);
+    if (supplier is null)
+        return Results.NotFound(new { error = "Supplier not found" });
+
+    suppliers.Remove(supplier);
+
+    // Also detach from products (set SupplierId = 0 for orphaned products)
+    foreach (var product in products.Where(p => p.SupplierId == id))
+    {
+        product.SupplierId = 0;
+    }
+
+    return Results.NoContent();
+});
 
 // API endpoint to get all products
 app.MapGet("/api/products", () =>
@@ -162,35 +279,6 @@ app.MapPatch("/api/products/{id:int}", (int id, ProductPatchDto partialUpdate, I
     return Results.Ok(existingProduct);
 });
 
-// update supplier for a product
-app.MapPatch("/api/products/{id:int}/supplier", (int id, SupplierPatchDto supplierUpdate, IValidator<SupplierPatchDto> validator) =>
-{
-    var product = products.FirstOrDefault(p => p.Id == id);
-    if (product is null)
-        return Results.NotFound(new { error = "Product not found" });
-
-    // Validate the supplier patch patch DTO
-    var result = validator.Validate(supplierUpdate);
-    if (!result.IsValid)
-        return Results.BadRequest(result.Errors);
-
-
-    //Ensure the supplier exists
-    product.Supplier ??= new Supplier { Name = "Default Supplier Name" };
-
-
-    // Apply updates
-    if (supplierUpdate.Name is not null)
-        product.Supplier. Name = supplierUpdate.Name;
-
-    if (supplierUpdate.Location is not null)
-            product.Supplier.Location = supplierUpdate.Location;
-
-   
-
-    return Results.Ok(product.Supplier);
-
-});
 
 
 // API endpoint to delete a product

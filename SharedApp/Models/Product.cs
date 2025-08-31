@@ -14,7 +14,8 @@ namespace SharedApp.Models
         public int Stock { get; set; }
 
         public List<string>? Categories { get; set; }
-        public Supplier? Supplier { get; set; }
+        public Supplier? Supplier { get; set; } = default!;
+        public int SupplierId { get; set; }
         public bool Available => Stock > 0;
 
     }

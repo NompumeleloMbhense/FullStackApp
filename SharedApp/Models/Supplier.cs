@@ -3,7 +3,9 @@ namespace SharedApp.Models
 {
     public class Supplier
     {
-        public required string Name { get; set; }
-        public string? Location { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public List<Product> Products { get; set; } = new();
     }
 }

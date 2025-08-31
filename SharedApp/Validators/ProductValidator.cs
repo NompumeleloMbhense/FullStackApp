@@ -16,13 +16,12 @@ namespace SharedApp.Validators
                 .GreaterThan(0).WithMessage("Price must be greater than 0");
 
             RuleFor(p => p.Stock)
-                .GreaterThanOrEqualTo(0).WithMessage("Stock cannot be zero");
+                .GreaterThanOrEqualTo(0).WithMessage("Stock cannot be negative");
 
             RuleFor(p => p.Categories)
                 .NotNull().WithMessage("Atleast one category is required")
-                .Must(c => c != null && c.Any())
-                .When(c=> c!=null)
-                .WithMessage("Atleast one category is required");
+                .Must(c => c.Any()).WithMessage("Atleast one category is required");
+                
 
             RuleFor(p => p.Supplier)
                 .SetValidator(new SupplierValidator()!)
