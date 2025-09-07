@@ -19,10 +19,10 @@ namespace SharedApp.Validators
                 .GreaterThanOrEqualTo(0).WithMessage("Stock must be zero or more")
                 .When(p => p.Stock is not null);
 
-            RuleFor(p => p.Categories)
-                .Must(c => c is not null && c.Any())
-                .WithMessage("At least one category is required")
-                .When(p => p.Categories is not null);
+            RuleFor(p => p.Category)
+                .NotEmpty().WithMessage("Category cannot be empty")
+                .MaximumLength(100)
+                .When(p => p.Category is not null);
         }
     }
 }

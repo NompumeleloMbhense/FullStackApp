@@ -2,10 +2,17 @@ using System.ComponentModel.DataAnnotations;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using FullStackApp.Models;
+using Microsoft.EntityFrameworkCore;
+using ServerApp.Data;
 using SharedApp.Models;
 using SharedApp.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// EF Core with SQLite
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite("Data Source=app.db"));
+
 
 builder.Services.AddCors(options =>
 {
@@ -48,82 +55,91 @@ app.UseCors();
 
 
 // In-memory suppliers
-var suppliers = new List<Supplier>
-{
-    new Supplier
-    {
-        Id = 1,
-        Name = "Tech World",
-        Location = "Roodepoort"
-    },
-    new Supplier
-    {
-        Id = 2,
-        Name = "Sound Co",
-        Location = "Randburg"
-    }
-};
+// var suppliers = new List<Supplier>
+// {
+//     new Supplier
+//     {
+//         Id = 1,
+//         Name = "Tech World",
+//         Location = "Roodepoort"
+//     },
+//     new Supplier
+//     {
+//         Id = 2,
+//         Name = "Sound Co",
+//         Location = "Randburg"
+//     }
+// };
 
 
-// In-memory product list 
-var products = new List<Product>()
-{
-    new Product
-    {
-        Id = 1,
-        Name = "Laptop",
-        Price = 12000.50M,
-        Stock = 25,
-        Categories = new List<string> {"Electronics", "Computers"},
-        SupplierId = 1
-    },
-    new Product
-    {
-        Id = 2,
-        Name = "Headphones",
-        Price = 450.00M,
-        Stock = 100,
-        Categories = new List<string> { "Accessories", "Audio" },
-        SupplierId = 2
-    }
-};
+// // In-memory product list 
+// var products = new List<Product>()
+// {
+//     new Product
+//     {
+//         Id = 1,
+//         Name = "Laptop",
+//         Price = 12000.50M,
+//         Stock = 25,
+//         Categories = new List<string> {"Electronics", "Computers"},
+//         SupplierId = 1
+//     },
+//     new Product
+//     {
+//         Id = 2,
+//         Name = "Headphones",
+//         Price = 450.00M,
+//         Stock = 100,
+//         Categories = new List<string> { "Accessories", "Audio" },
+//         SupplierId = 2
+//     }
+// };
 
 
 // --------------------------------- SUPPLIERS ENDPOINTS -------------------------------
 
 
 // Get All Suppliers
-app.MapGet("/api/suppliers", () =>
+app.MapGet("/api/suppliers", async (AppDbContext db) =>
 {
+    var suppliers = await db.Suppliers
+                        .Include(s => s.Products)
+                        .ToListAsync();
+
     return Results.Ok(suppliers);
 });
 
 // Get Supplier By Id
-app.MapGet("/api/suppliers/{id:int}", (int id) =>
+app.MapGet("/api/suppliers/{id:int}", async (int id, AppDbContext db) =>
 {
-    var supplier = suppliers.FirstOrDefault(s => s.Id == id);
+    var supplier = await db.Suppliers
+                .Include(s => s.Products)
+                .FirstOrDefaultAsync(s => s.SupplierId == id);
 
-    return supplier is not null ? Results.Ok(supplier) : Results.NotFound(new { error = "Supplier not found" });
+    return supplier is not null
+        ? Results.Ok(supplier) 
+        : Results.NotFound(new { error = "Supplier not found" });
 });
 
 // Create Supplier
-app.MapPost("/api/suppliers", (Supplier? newSupplier, IValidator<Supplier> validator) =>
+app.MapPost("/api/suppliers", async (Supplier newSupplier, IValidator<Supplier> validator, AppDbContext db) =>
 {
-    
+
     var result = validator.Validate(newSupplier);
     if (!result.IsValid)
         return Results.BadRequest(result.Errors);
 
-    newSupplier.Id = suppliers.Any() ? suppliers.Max(s => s.Id) + 1 : 1;
-    suppliers.Add(newSupplier);
+    db.Suppliers.Add(newSupplier);
+    await db.SaveChangesAsync();
 
-    return Results.Created($"/api/suppliers/{newSupplier.Id}", newSupplier);
+    return Results.Created($"/api/suppliers/{newSupplier.SupplierId}", newSupplier);
 });
 
+
 // Update Supplier 
-app.MapPut("/api/suppliers/{id:int}", (int id, Supplier updatedSupplier, IValidator<Supplier> validator) =>
+app.MapPut("/api/suppliers/{id:int}", async (int id, Supplier updatedSupplier, IValidator<Supplier> validator, AppDbContext db) =>
 {
-    var supplier = suppliers.FirstOrDefault(s => s.Id == id);
+    var supplier = await db.Suppliers.FindAsync(id);
     if (supplier is null)
         return Results.NotFound(new { error = "Supplier not found" });
 
@@ -134,13 +150,15 @@ app.MapPut("/api/suppliers/{id:int}", (int id, Supplier updatedSupplier, IValida
     supplier.Name = updatedSupplier.Name;
     supplier.Location = updatedSupplier.Location;
 
+    await db.SaveChangesAsync();
+
     return Results.Ok(supplier);
 });
 
 // Partially update supplier
-app.MapPatch("/api/suppliers/{id:int}", (int id, SupplierPatchDto supplierUpdate, IValidator<SupplierPatchDto> validator) =>
+app.MapPatch("/api/suppliers/{id:int}", async (int id, SupplierPatchDto supplierUpdate, IValidator<SupplierPatchDto> validator, AppDbContext db) =>
 {
-    var supplier = suppliers.FirstOrDefault(s => s.Id == id);
+    var supplier = await db.Suppliers.FindAsync(id);
 
     if (supplier is null)
         return Results.NotFound(new { error = "Supplier not found" });
@@ -150,14 +168,17 @@ app.MapPatch("/api/suppliers/{id:int}", (int id, SupplierPatchDto supplierUpdate
         return Results.BadRequest(result.Errors);
 
 
-    if (supplier is not null && supplierUpdate.Name is not null)
+    if (supplierUpdate.Name is not null)
         supplier.Name = supplierUpdate.Name;
 
-    if (supplier is not null && supplierUpdate.Location is not null)
+    if (supplierUpdate.Location is not null)
         supplier.Location = supplierUpdate.Location;
+
+    await db.SaveChangesAsync();
 
     return Results.Ok(supplier);
 });
+
 
 // When a user send a PATCH request without an Id
 app.MapPatch("/api/suppliers", () =>
@@ -167,43 +188,63 @@ app.MapPatch("/api/suppliers", () =>
 
 
 // Delete Supplier
-app.MapDelete("/api/suppliers/{id:int}", (int id) =>
+app.MapDelete("/api/suppliers/{id:int}", async (int id, AppDbContext db) =>
 {
-    var supplier = suppliers.FirstOrDefault(s => s.Id == id);
+    var supplier = await db.Suppliers
+        .Include(s => s.Products)
+        .FirstOrDefaultAsync(s => s.SupplierId == id);
+
+
     if (supplier is null)
         return Results.NotFound(new { error = "Supplier not found" });
 
-    suppliers.Remove(supplier);
 
-    // Also detach from products (set SupplierId = 0 for orphaned products)
-    foreach (var product in products.Where(p => p.SupplierId == id))
+    // Handle orphaned products
+    foreach (var product in supplier.Products)
     {
         product.SupplierId = 0;
     }
 
+    db.Suppliers.Remove(supplier);
+    await db.SaveChangesAsync();
+    
     return Results.NoContent();
 });
 
-// API endpoint to get all products
-app.MapGet("/api/products", () =>
+
+// --------------------------------- PRODUCTS ENDPOINTS -------------------------------
+
+
+// Get All Products (with Supplier)
+app.MapGet("/api/products", async (AppDbContext db) =>
 {
+    var products = await db.Products
+                           .Include(p => p.Supplier) // eager-load supplier
+                           .ToListAsync();
     return Results.Ok(products);
 });
 
-// API endpoint to get a product by ID
-app.MapGet("/api/products/{id:int}", (int id) =>
+// Get Product By Id (with Supplier)
+app.MapGet("/api/products/{id:int}", async (int id, AppDbContext db) =>
 {
-    // Find the product by ID
-    var product = products.FirstOrDefault(p => p.Id == id);
-    return product is not null ? Results.Ok(product) : Results.NotFound(new { error = "Product not found" });
+    var product = await db.Products
+                          .Include(p => p.Supplier)
+                          .FirstOrDefaultAsync(p => p.ProductId == id);
 
+    return product is not null 
+        ? Results.Ok(product) 
+        : Results.NotFound(new { error = "Product not found" });
 });
 
 
 // Get supplier for a product
-app.MapGet("/api/products/{id:int}/supplier", (int id) =>
+app.MapGet("/api/products/{id:int}/supplier", async (int id, AppDbContext db) =>
 {
-    var product = products.FirstOrDefault(p => p.Id == id);
+    var product = await db.Products
+                          .Include(p => p.Supplier)
+                          .FirstOrDefaultAsync(p => p.SupplierId == id);
+
+
     if (product is null || product.Supplier is null)
         return Results.NotFound(new { error = "Supplier not found" });
 
@@ -211,9 +252,8 @@ app.MapGet("/api/products/{id:int}/supplier", (int id) =>
 });
 
 
-
-// API endpoint to add a new product
-app.MapPost("/api/products", (Product newProduct, IValidator<Product> validator) =>
+// Create a Product
+app.MapPost("/api/products", async (Product newProduct, IValidator<Product> validator, AppDbContext db) =>
 {
 
     // Validate the new product using FluentValidation
@@ -221,96 +261,88 @@ app.MapPost("/api/products", (Product newProduct, IValidator<Product> validator)
     if (!result.IsValid)
         return Results.BadRequest(result.Errors);
 
-    // Ensure products is not empty before incrementing ID
-    newProduct.Id = products.Any() ? products.Max(p => p.Id) + 1 : 1;
+    // ensure supplier exists if SupplierId is provided
+    if (newProduct.SupplierId != 0)
+    {
+        var supplier = await db.Suppliers.FindAsync(newProduct.SupplierId);
+        if (supplier is null)
+            return Results.BadRequest(new { error = "Invalid SupplierId" });
+    }
 
     // Add the new product to the list
-    products.Add(newProduct);
+    db.Products.Add(newProduct);
+
+    await db.SaveChangesAsync();
 
     // return the added product
-    return Results.Created($"/api/products/{newProduct.Id}", newProduct);
+    return Results.Created($"/api/products/{newProduct.ProductId}", newProduct);
 });
 
 
-// API endpoint to update an existing product
-app.MapPut("/api/products/{id:int}", (int id, Product updatedProduct, IValidator<Product> validator) =>
+// Update Product (PUT)
+app.MapPut("/api/products/{id:int}", async (int id, Product updatedProduct, IValidator<Product> validator, AppDbContext db) =>
 {
-    var existingProduct = products.FirstOrDefault(p => p.Id == id);
-
+    var existingProduct = await db.Products.FindAsync(id);
     if (existingProduct is null)
         return Results.NotFound(new { error = "Product not found" });
 
-
-    // Validate the updated product using FluentValidation
     var result = validator.Validate(updatedProduct);
     if (!result.IsValid)
         return Results.BadRequest(result.Errors);
 
-
-    // Update the existing product
+    // update fields
     existingProduct.Name = updatedProduct.Name;
     existingProduct.Price = updatedProduct.Price;
     existingProduct.Stock = updatedProduct.Stock;
-    existingProduct.Categories = updatedProduct.Categories ?? new List<string>();
-    existingProduct.Supplier = updatedProduct.Supplier;
+    existingProduct.Category = updatedProduct.Category;
+    existingProduct.SupplierId = updatedProduct.SupplierId;
+
+    await db.SaveChangesAsync();
 
     return Results.Ok(existingProduct);
-
 });
 
-// API endpoint to partially update an existing product
-app.MapPatch("/api/products/{id:int}", (int id, ProductPatchDto partialUpdate, IValidator<ProductPatchDto> validator) =>
-{
-    // Find the product by ID
-    var existingProduct = products.FirstOrDefault(p => p.Id == id);
 
+// Partially Update Product (PATCH)
+app.MapPatch("/api/products/{id:int}", async (int id, ProductPatchDto partialUpdate, IValidator<ProductPatchDto> validator, AppDbContext db) =>
+{
+    var existingProduct = await db.Products.FindAsync(id);
     if (existingProduct is null)
         return Results.NotFound(new { error = "Product not found" });
 
-    // Validate the partial update using FluentValidation
     var result = validator.Validate(partialUpdate);
     if (!result.IsValid)
         return Results.BadRequest(result.Errors);
 
-
-    // Name validation and update
     if (partialUpdate.Name is not null)
         existingProduct.Name = partialUpdate.Name;
 
-
-    // Price validation & update
     if (partialUpdate.Price.HasValue)
         existingProduct.Price = partialUpdate.Price.Value;
 
-
-    // Stock validation & update
     if (partialUpdate.Stock.HasValue)
         existingProduct.Stock = partialUpdate.Stock.Value;
 
+    if (partialUpdate.Category is not null)
+        existingProduct.Category = partialUpdate.Category;
 
-    // Update categories
-    if (partialUpdate.Categories is not null && partialUpdate.Categories.Any())
-        existingProduct.Categories = partialUpdate.Categories;
-
+    await db.SaveChangesAsync();
 
     return Results.Ok(existingProduct);
 });
 
 
-
-// API endpoint to delete a product
-app.MapDelete("/api/products/{id:int}", (int id) =>
+// Delete Product
+app.MapDelete("/api/products/{id:int}", async (int id, AppDbContext db) =>
 {
-    // Find the product by ID
-    var existingProduct = products.FirstOrDefault(p => p.Id == id);
-
+    var existingProduct = await db.Products.FindAsync(id);
     if (existingProduct is null)
         return Results.NotFound(new { error = "Product not found" });
 
-    // Remove the product from the list
-    products.Remove(existingProduct);
-    return Results.NoContent();
+    db.Products.Remove(existingProduct);
+    await db.SaveChangesAsync();
 
+    return Results.NoContent();
 });
 
 

@@ -5,7 +5,7 @@ namespace SharedApp.Models
 {
     public class Product
     {
-        public int Id { get; set; }
+        public int ProductId { get; set; }
 
         public string Name { get; set; } = string.Empty;
 
@@ -13,7 +13,7 @@ namespace SharedApp.Models
         
         public int Stock { get; set; }
 
-        public List<string>? Categories { get; set; }
+        public string Category { get; set; } = string.Empty;
         public Supplier? Supplier { get; set; } = default!;
         public int SupplierId { get; set; }
         public bool Available => Stock > 0;

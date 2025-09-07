@@ -18,9 +18,9 @@ namespace SharedApp.Validators
             RuleFor(p => p.Stock)
                 .GreaterThanOrEqualTo(0).WithMessage("Stock cannot be negative");
 
-            RuleFor(p => p.Categories)
-                .NotNull().WithMessage("Atleast one category is required")
-                .Must(c => c.Any()).WithMessage("Atleast one category is required");
+            RuleFor(p => p.Category)
+                .NotEmpty().WithMessage("Category is required")
+                .MaximumLength(100);
                 
 
             RuleFor(p => p.Supplier)
