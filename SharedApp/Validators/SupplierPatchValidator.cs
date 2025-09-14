@@ -1,5 +1,5 @@
 using FluentValidation;
-using FullStackApp.Models;
+using SharedApp.Models;
 
 namespace SharedApp.Validators
 {

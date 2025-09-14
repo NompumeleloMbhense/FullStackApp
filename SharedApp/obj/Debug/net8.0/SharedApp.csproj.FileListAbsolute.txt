@@ -11,3 +11,5 @@ C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.pdb
 C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\ref\SharedApp.dll
 C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.sourcelink.json
 C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.csproj.AssemblyReference.cache
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\bin\Debug\net8.0\SharedApp.runtimeconfig.json
+C:\Users\nsmbh\Projects\FullStackApp\SharedApp\obj\Debug\net8.0\SharedApp.genruntimeconfig.cache

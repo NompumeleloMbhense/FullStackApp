@@ -1,6 +1,6 @@
 using SharedApp.Models;
 
-namespace FullStackApp.Models
+namespace SharedApp.Models
 {
     public class SupplierPatchDto
     {
