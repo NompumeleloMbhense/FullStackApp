@@ -1,7 +1,8 @@
 using FluentValidation;
-using FullStackApp.Models;
 using Microsoft.AspNetCore.Mvc;
+using SharedApp.Validators;
 using SharedApp.Models;
+using SharedApp.Models.Dto;
 
 namespace ServerApp.Controllers
 {
@@ -10,23 +11,43 @@ namespace ServerApp.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly IProductRepository _repo;
-        private readonly IValidator<Product> _validator;
+        private readonly IValidator<ProductCreateDto> _createValidator;
+        private readonly IValidator<ProductUpdateDto> _updateValidator;
         private readonly IValidator<ProductPatchDto> _patchValidator;
 
-        public ProductsController(IProductRepository repo, IValidator<Product> validator, IValidator<ProductPatchDto> patchValidator)
+        public ProductsController(
+            IProductRepository repo,
+            IValidator<ProductCreateDto> createValidator,
+            IValidator<ProductUpdateDto> updateValidator,
+            IValidator<ProductPatchDto> patchValidator)
         {
             _repo = repo;
-            _validator = validator;
+            _createValidator = createValidator;
+            _updateValidator = updateValidator;
             _patchValidator = patchValidator;
         }
 
+        // GET: api/products
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var products = await _repo.GetAllAsync();
-            return Ok(products);
+
+            var result = products.Select(p => new ProductReadDto
+            {
+                ProductId = p.ProductId,
+                Name = p.Name,
+                Price = p.Price,
+                Stock = p.Stock,
+                Category = p.Category,
+                Available = p.Available,
+                SupplierId = p.SupplierId
+            });
+
+            return Ok(result);
         }
 
+        // GET: api/products/5
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -34,65 +55,126 @@ namespace ServerApp.Controllers
             if (product is null)
                 return NotFound(new { error = "Product not found" });
 
-            return Ok(product);
+            var result = new ProductReadDto
+            {
+                ProductId = product.ProductId,
+                Name = product.Name,
+                Price = product.Price,
+                Stock = product.Stock,
+                Category = product.Category,
+                Available = product.Available,
+                SupplierId = product.SupplierId
+            };
+
+            return Ok(result);
         }
 
+        // POST: api/products
         [HttpPost]
-        public async Task<IActionResult> Create(Product newProduct)
+        public async Task<IActionResult> Create(ProductCreateDto dto)
         {
-            var validationResult = _validator.Validate(newProduct);
+            var validationResult = _createValidator.Validate(dto);
             if (!validationResult.IsValid)
                 return BadRequest(validationResult.Errors);
 
-            await _repo.AddAsync(newProduct);
+            var product = new Product
+            {
+                Name = dto.Name,
+                Price = dto.Price,
+                Stock = dto.Stock,
+                Category = dto.Category,
+                SupplierId = dto.SupplierId
+            };
 
-            return CreatedAtAction(nameof(GetById), new { id = newProduct.ProductId }, newProduct);
+            await _repo.AddAsync(product);
+
+            var result = new ProductReadDto
+            {
+                ProductId = product.ProductId,
+                Name = product.Name,
+                Price = product.Price,
+                Stock = product.Stock,
+                Category = product.Category,
+                Available = product.Available,
+                SupplierId = product.SupplierId
+            };
+
+            return CreatedAtAction(nameof(GetById), new { id = product.ProductId }, result);
         }
 
-        [HttpPut("{int:id}")]
-        public async Task<IActionResult> Update(int id, Product updatedProduct)
-        {
-            var existingProduct = await _repo.GetByIdAsync(id);
-
-            if (existingProduct is null)
-                return NotFound(new { error = "Product not found" });
-
-            var validationResult = _validator.Validate(updatedProduct);
-            if (!validationResult.IsValid)
-                return BadRequest(validationResult.Errors);
-
-            existingProduct.Name = updatedProduct.Name;
-            existingProduct.Price = updatedProduct.Price;
-            existingProduct.Stock = updatedProduct.Stock;
-            existingProduct.Category = updatedProduct.Category;
-            existingProduct.SupplierId = updatedProduct.SupplierId;
-
-            await _repo.UpdateAsync(existingProduct);
-
-            return Ok(existingProduct);
-        }
-
-        [HttpPatch("{int:id}")]
-        public async Task<IActionResult> Patch(int id, ProductPatchDto partialUpdate)
+        // PUT: api/products/5
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, ProductUpdateDto dto)
         {
             var existingProduct = await _repo.GetByIdAsync(id);
             if (existingProduct is null)
                 return NotFound(new { error = "Product not found" });
 
-            var validationResult = _patchValidator.Validate(partialUpdate);
+            var validationResult = _updateValidator.Validate(dto);
             if (!validationResult.IsValid)
                 return BadRequest(validationResult.Errors);
 
-            if (partialUpdate.Name is not null) existingProduct.Name = partialUpdate.Name;
-            if (partialUpdate.Price.HasValue) existingProduct.Price = partialUpdate.Price.Value;
-            if (partialUpdate.Stock.HasValue) existingProduct.Stock = partialUpdate.Stock.Value;
-            if (partialUpdate.Category is not null) existingProduct.Category = partialUpdate.Category;
+            existingProduct.Name = dto.Name;
+            existingProduct.Price = dto.Price;
+            existingProduct.Stock = dto.Stock;
+            existingProduct.Category = dto.Category;
+            existingProduct.SupplierId = dto.SupplierId;
 
             await _repo.UpdateAsync(existingProduct);
 
-            return Ok(existingProduct);
+            var result = new ProductReadDto
+            {
+                ProductId = existingProduct.ProductId,
+                Name = existingProduct.Name,
+                Price = existingProduct.Price,
+                Stock = existingProduct.Stock,
+                Category = existingProduct.Category,
+                Available = existingProduct.Available,
+                SupplierId = existingProduct.SupplierId
+            };
+
+            return Ok(result);
         }
 
+        // PATCH: api/products/5
+        [HttpPatch("{id:int}")]
+        public async Task<IActionResult> Patch(int id, ProductPatchDto dto)
+        {
+            var existingProduct = await _repo.GetByIdAsync(id);
+            if (existingProduct is null)
+                return NotFound(new { error = "Product not found" });
+
+            var validationResult = _patchValidator.Validate(dto);
+            if (!validationResult.IsValid)
+                return BadRequest(validationResult.Errors);
+
+            if (dto.Name is not null)
+                existingProduct.Name = dto.Name;
+            if (dto.Price is not null)
+                existingProduct.Price = dto.Price.Value;
+            if (dto.Stock is not null)
+                existingProduct.Stock = dto.Stock.Value;
+            if (dto.Category is not null)
+                existingProduct.Category = dto.Category;
+            if (dto.SupplierId is not null)
+                existingProduct.SupplierId = dto.SupplierId.Value;
+
+            await _repo.UpdateAsync(existingProduct);
+
+            var result = new ProductReadDto
+            {
+                ProductId = existingProduct.ProductId,
+                Name = existingProduct.Name,
+                Price = existingProduct.Price,
+                Stock = existingProduct.Stock,
+                Category = existingProduct.Category,
+                SupplierId = existingProduct.SupplierId
+            };
+
+            return Ok(result);
+        }
+
+        // DELETE: api/products/5
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {

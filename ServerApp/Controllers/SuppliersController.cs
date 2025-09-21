@@ -1,7 +1,9 @@
 using FluentValidation;
-using SharedApp.Validators;
 using Microsoft.AspNetCore.Mvc;
+using SharedApp.Validators;
 using SharedApp.Models;
+using SharedApp.Models.Dto;
+
 
 namespace ServerApp.Controllers
 {
@@ -10,23 +12,39 @@ namespace ServerApp.Controllers
     public class SuppliersController : ControllerBase
     {
         private readonly ISupplierRepository _repo;
-        private readonly IValidator<Supplier> _validator;
+        private readonly IValidator<SupplierCreateDto> _createValidator;
+        private readonly IValidator<SupplierUpdateDto> _updateValidator;
         private readonly IValidator<SupplierPatchDto> _patchValidator;
 
-        public SuppliersController(ISupplierRepository repo, IValidator<Supplier> validator, IValidator<SupplierPatchDto> patchValidator)
+        public SuppliersController(
+            ISupplierRepository repo,
+            IValidator<SupplierCreateDto> createValidator,
+            IValidator<SupplierUpdateDto> updateValidator,
+            IValidator<SupplierPatchDto> patchValidator)
         {
             _repo = repo;
-            _validator = validator;
+            _createValidator = createValidator;
+            _updateValidator = updateValidator;
             _patchValidator = patchValidator;
         }
 
+        // GET: api/suppliers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var suppliers = await _repo.GetAllAsync();
-            return Ok(suppliers);
+
+            var result = suppliers.Select(s => new SupplierReadDto
+            {
+                SupplierId = s.SupplierId,
+                Name = s.Name,
+                Location = s.Location
+            });
+
+            return Ok(result);
         }
 
+        // GET: api/suppliers/5
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -34,62 +52,102 @@ namespace ServerApp.Controllers
             if (supplier is null)
                 return NotFound(new { error = "Supplier not found" });
 
-            return Ok(supplier);
+            var result = new SupplierReadDto
+            {
+                SupplierId = supplier.SupplierId,
+                Name = supplier.Name,
+                Location = supplier.Location
+            };
+
+            return Ok(result);
         }
 
+        // POST: api/suppliers
         [HttpPost]
-        public async Task<IActionResult> Create(Supplier newSupplier)
+        public async Task<IActionResult> Create(SupplierCreateDto dto)
         {
-            var validationResult = _validator.Validate(newSupplier);
+            var validationResult = _createValidator.Validate(dto);
             if (!validationResult.IsValid)
                 return BadRequest(validationResult.Errors);
 
-            await _repo.AddAsync(newSupplier);
+            var supplier = new Supplier
+            {
+                Name = dto.Name,
+                Location = dto.Location
+            };
 
-            return CreatedAtAction(nameof(GetById), new { id = newSupplier.SupplierId }, newSupplier);
+            await _repo.AddAsync(supplier);
+
+            var result = new SupplierReadDto
+            {
+                SupplierId = supplier.SupplierId,
+                Name = supplier.Name,
+                Location = supplier.Location
+            };
+
+            return CreatedAtAction(nameof(GetById), new { id = supplier.SupplierId }, result);
         }
 
+
+        // api/suppliers/5
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, Supplier updatedSupplier)
+        public async Task<IActionResult> Update(int id, SupplierUpdateDto dto)
         {
             var existingSupplier = await _repo.GetByIdAsync(id);
             if (existingSupplier is null)
                 return NotFound(new { error = "Supplier not found" });
 
-            var validationResult = _validator.Validate(updatedSupplier);
+            var validationResult = _updateValidator.Validate(dto);
             if (!validationResult.IsValid)
                 return BadRequest(validationResult.Errors);
 
-            existingSupplier.Name = updatedSupplier.Name;
-            existingSupplier.Location = updatedSupplier.Location;
+            existingSupplier.Name = dto.Name;
+            existingSupplier.Location = dto.Location;
 
             await _repo.UpdateAsync(existingSupplier);
 
-            return Ok(existingSupplier);
+            var result = new SupplierReadDto
+            {
+                SupplierId = existingSupplier.SupplierId,
+                Name = existingSupplier.Name,
+                Location = existingSupplier.Location
+            };
+
+            return Ok(result);
         }
 
+
+        // PATCH: api/suppliers/5
         [HttpPatch("{id:int}")]
-        public async Task<IActionResult> Patch(int id, SupplierPatchDto partialUpdate)
+        public async Task<IActionResult> Patch(int id, SupplierPatchDto dto)
         {
             var existingSupplier = await _repo.GetByIdAsync(id);
             if (existingSupplier is null)
                 return NotFound(new { error = "Supplier not found" });
 
-            var validationResult = _patchValidator.Validate(partialUpdate);
+            var validationResult = _patchValidator.Validate(dto);
             if (!validationResult.IsValid)
                 return BadRequest(validationResult.Errors);
 
-            if (partialUpdate.Name is not null)
-                existingSupplier.Name = partialUpdate.Name;
+            if (dto.Name is not null)
+                existingSupplier.Name = dto.Name;
 
-            if (partialUpdate.Location is not null)
-                existingSupplier.Location = partialUpdate.Location;
+            if (dto.Location is not null)
+                existingSupplier.Location = dto.Location;
 
             await _repo.UpdateAsync(existingSupplier);
 
-            return Ok(existingSupplier);
+            var result = new SupplierReadDto
+            {
+                SupplierId = existingSupplier.SupplierId,
+                Name = existingSupplier.Name,
+                Location = existingSupplier.Location
+            };
+
+            return Ok(result);
         }
 
+        // DELETE: api/suppliers/5
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {

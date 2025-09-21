@@ -11,7 +11,7 @@ using SharedApp.Data;
 namespace SharedApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250913180314_InitialCreate")]
+    [Migration("20250919185005_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
